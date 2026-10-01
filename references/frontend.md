@@ -50,11 +50,13 @@ Choose a documented client runtime, ordinarily Vite with a suitable router unles
 
 Use `src/app/` for bootstrap/providers/router composition and `src/routes/` for route files when the chosen router supports them. Route components delegate to feature views. Preserve protected routes and authorization-aware navigation without treating client-side guards as security enforcement. Ensure deep links work through hosting rewrites.
 
-If the source is TanStack Start, inventory SSR/server functions, middleware and server endpoints. Selecting a browser-only React target requires moving those responsibilities and adapting data loading/hydration. Do not remove the Lovable Vite wrapper, Nitro or route plugin before the replacement build and all dependent features work.
+If the source is TanStack Start, inventory SSR/server functions (`createServerFn` in `*.functions.ts`, server-only `*.server.ts`), middleware and server endpoints. Lovable's `@lovable.dev/vite-tanstack-config` builds for Cloudflare Workers by default; account for that runtime (Workers bindings, no Node APIs) when moving server code to the backend and when choosing target hosting. Selecting a browser-only React target requires moving those responsibilities and adapting data loading/hydration. Do not remove the Lovable Vite wrapper, Nitro or route plugin before the replacement build and all dependent features work.
 
 ## Vue.js
 
 Use Vue 3 + TypeScript and a compatible runtime, typically Vite plus Vue Router. Keep bootstrap/providers/router in `src/app/`, feature views and SFCs in feature folders, and reusable behavior in composables. Vue Router route configuration is valid; choose supported file-routing tooling only if justified and configured. Do not impose Next.js conventions or silently switch to Nuxt.
+
+Choosing Vue for a React source is a full UI rewrite. Lovable apps commonly use React with shadcn/ui (Radix), Tailwind, lucide-react, TanStack Query and React Hook Form; confirm the actual libraries from `package.json`. State this effort and the visual-parity risk in the plan before the user confirms. Prefer equivalents that preserve design and accessibility (for example shadcn-vue/Reka UI, Tailwind with the same theme tokens, lucide-vue-next, TanStack Query for Vue, VeeValidate with the same schemas) after checking current compatibility, and verify parity screen by screen.
 
 Translate React component/hooks behavior into Vue SFCs/composables rather than wrapping React source. Preserve accessibility, permissions, route params, form semantics, loading states and cache invalidation. Use Pinia for justified global application state and a compatible server-state cache when needed; avoid storing a second copy of every API response.
 
