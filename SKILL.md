@@ -33,6 +33,20 @@ This skill is generic. It must work for any Lovable or Supabase application: any
 - The listed stacks (Next.js, React, Vue; Express, NestJS) are the supported branches. If the user explicitly asks for a different one (for example Fastify, Hono, Nuxt, SvelteKit or Angular), apply the same architecture, security and verification rules, say that it is outside the documented branches, and confirm the framework conventions from its official docs.
 - When evidence contradicts this skill (a newer Lovable template, a different Supabase feature, an unusual layout), follow the evidence, record the difference, and ask the user if it changes scope.
 
+## Scope boundary
+
+All work stays inside exactly two target projects: `<app>-frontend` and `<app>-backend` (the frontend may be the reused source repository). Everything the migration needs is placed in one of them:
+
+| Concern | Lives in |
+| --- | --- |
+| UI, routes, feature API client, generated API types, component/E2E tests | `<app>-frontend` |
+| API, business logic, database migrations/seeds, auth, jobs/workers, webhooks, integrations, Edge Function ports, MCP server, data/identity/file import scripts, OpenAPI spec, Docker Compose, test database setup, `docs/migration/` | `<app>-backend` |
+
+- Do not create any other repository or top-level folder: no shared/contracts/types package, infra/devops, docs, worker, MCP, migrations or monorepo root, and no files directly in the parent workspace folder. If something looks like it needs its own deployable (for example a worker), keep it in the backend as a separate entry point and Docker target.
+- Treat the source repository as read-only, except when it is explicitly reused as `<app>-frontend`.
+- Do not change anything outside these projects: no global package installs, shell profiles, system or editor settings, hosts files, other projects, or user-level config. Temporary files go in the system temp directory and are deleted afterwards; Docker containers, networks and volumes for development and tests use the `<app>` prefix and test ones are removed after the run.
+- Stay within the migration. Do not add new product features, redesign the UI, refactor or upgrade unrelated code, or migrate other clients (mobile apps, scripts, partner integrations). Record such findings in the final report as follow-ups and ask the user before expanding scope.
+
 ## Non-negotiable outcomes
 
 - Analyze before choosing architecture; ask for the missing frontend and backend selection before scaffolding. Never silently default to any stack (for example Express/TypeORM/React) because it is common.

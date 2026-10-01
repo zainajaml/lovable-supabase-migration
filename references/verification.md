@@ -10,6 +10,7 @@ Fix actionable failures within scope and rerun affected checks. External credent
 
 | Gate | Evidence required |
 | --- | --- |
+| Scope boundary | Every created or modified file is inside `<app>-frontend` or `<app>-backend` (or the reused source repo); no extra repositories or workspace-level files; nothing changed outside them (no global installs, system or user config); test containers and temp files removed; out-of-scope findings listed as follow-ups, not implemented |
 | Source/canonical roots | Source and target roots match deployment evidence; no accidental duplicate-tree edits; independent repository roots and package/build boundaries |
 | Architectural structure | Actual feature modules, thin routes/controllers, backend services/use cases, isolated persistence, frontend feature API/hooks, explicit public exports; no unnecessary empty layers |
 | Type/build quality | Independent clean dependency installs, strict type checks, lint/format and production builds; valid framework runtime and route deep links |
