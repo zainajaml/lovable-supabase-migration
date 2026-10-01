@@ -28,6 +28,17 @@ Use independent sibling roots named after the actual application, never literal 
 └── <app>-backend/     # e.g. acme-crm-backend/
 ```
 
+`<workspace>` is the **parent directory of the source application's Git root** (the folder that contains the current Lovable/Supabase repository), not the current working directory and never a folder inside the source repository. Find it with `git rev-parse --show-toplevel` from the source app and take its parent. If the source is inside a monorepo, or the parent is not writable or is an unrelated location (for example the home directory or a system folder), ask the user where to create the repositories. A destination the user names always wins. Example:
+
+```text
+/home/dev/projects/            <- <workspace> (parent of the source repo)
+├── acme-crm/                  <- existing Lovable source repo (preserved)
+├── acme-crm-frontend/         <- new, or acme-crm/ reused as the frontend
+└── acme-crm-backend/          <- new
+```
+
+New repositories are created **locally** with `git init` and their own initial commit. Creating or pushing to a remote (GitHub, GitLab and so on) happens only when the user asks and access is available.
+
 Derive `<app>` dynamically, in this order: a name the user gives; otherwise the existing repository folder or Git remote name; otherwise the `name` in the source `package.json`; otherwise the product name in the app's title or README. Normalize it to lowercase kebab-case (letters, digits and hyphens; strip scopes like `@org/` and suffixes such as `-frontend`, `-app` or `-main` that would double up). Ignore generic generated names (for example `vite_react_shadcn_ts`, `my-app`, `lovable-project`, `tanstack-start`) and ask the user for a name instead. Present the proposed names and full paths in the plan so the user can change them, then use the same `<app>` everywhere: folder names, each repository's `package.json` `name`, Docker image/service and Compose project names, CI workflow names and documentation. If a proposed path already exists, do not reuse or overwrite it; propose a different name and ask.
 
 Reuse the existing frontend repository when the selected stack makes that practical (it keeps its current folder name unless the user asks to rename it; the new backend is then `<app>-backend` beside it); create a new sibling frontend when a framework transition requires it. Preserve source history and the old application until replacement verification. Check path collisions first. Each target has its own Git root, package manifest, lockfile, build, tests, environment example, CI and deployment instructions. Do not place a new `.git` under an unrelated existing Git root without a deliberate plan. Remote repository creation/publishing follows user authorization and available access; local repositories can still be prepared when remotes are unavailable.

@@ -109,7 +109,7 @@ Read architecture.md, the applicable frontend/backend branches, and data-securit
 
 ### 4. Establish foundations
 
-Create collision-safe sibling repositories using the agreed dynamic names (`<app>-frontend`, `<app>-backend`), or use the authorized existing repository destinations. Preserve source history/worktrees and user edits. Do not nest backend inside frontend or initialize over an existing unrelated checkout. Add strict TypeScript, configuration validation, persistence/migrations, auth policy plumbing, errors/logging, health endpoints, API contract generation, central frontend client, and framework routing. Read data-security.md before selecting auth or moving data.
+Create collision-safe sibling repositories using the agreed dynamic names (`<app>-frontend`, `<app>-backend`) in the parent directory of the source repository's Git root (see architecture.md), unless the user named another destination, or use the authorized existing repository destinations. Preserve source history/worktrees and user edits. Do not nest backend inside frontend or initialize over an existing unrelated checkout. Add strict TypeScript, configuration validation, persistence/migrations, auth policy plumbing, errors/logging, health endpoints, API contract generation, central frontend client, and framework routing. Read data-security.md before selecting auth or moving data.
 
 ### 5. Migrate vertical features
 
