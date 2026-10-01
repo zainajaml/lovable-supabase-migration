@@ -24,7 +24,7 @@ Configure frontend API origin, reverse-proxy routing, allowed origins, TLS, cook
 
 ## Independent CI and contract compatibility
 
-Each repository must install from its own lockfile and run formatting/lint/type checks, meaningful tests and a production build. Backend CI uses isolated PostgreSQL to apply migrations and test APIs/authorization. Generate/lint OpenAPI and run route/spec/response checks. Frontend CI checks against a pinned contract artifact/client and runs component/core journey tests as applicable. Never copy backend source from a sibling path to make CI pass.
+Each repository must install from its own lockfile and run formatting/lint/type checks, a circular-dependency check, meaningful tests and a production build. Backend CI uses isolated PostgreSQL to apply migrations and test APIs/authorization. Generate/lint OpenAPI and run route/spec/response checks. Frontend CI checks against a pinned contract artifact/client and runs component/core journey tests as applicable. Never copy backend source from a sibling path to make CI pass.
 
 Record security/dependency scan results, necessary exceptions and build artifacts. Define a contract compatibility check and deployment order for breaking changes. Prefer additive API/database changes, migrate clients/data, then remove old behavior after verified usage has ended.
 

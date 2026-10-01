@@ -24,7 +24,10 @@ Fix actionable failures within scope and rerun affected checks. External credent
 | Authorization | Positive and negative API tests for discovered RLS/policy cases, cross-tenant/ownership checks, list/count/bulk actions, files and privileged endpoints |
 | Authentication | Required login/logout/signup/reset/verify/OAuth flows; expired/revoked sessions, refresh races, single-use tokens, multi-instance state, no URL-token leaks or known production secret defaults |
 | API contracts | Spec parses, route coverage matches, validation/response/error schemas match live responses, stable operation IDs/security schemes and generated client compatibility |
-| Client behavior | Central transport, timeout/cancel, error mapping, refresh retry bounds, file/no-body handling, cache isolation/invalidation and no raw API calls in presentation code |
+| Payload format | Every JSON endpoint returns the standard success/error envelope via central interceptors/filters or middleware; documented exceptions only; OpenAPI wrapper schemas match live responses |
+| Error handling and retries | Domain errors map to correct status/code; unknown errors return safe 500 with request ID; no empty catches; retries only on transient failures with attempt limit, backoff and idempotency; jobs end in a visible failed/dead-letter state |
+| Circular dependencies | Cycle check (for example madge or dependency-cruiser) passes in both repositories and runs in CI; no undocumented `forwardRef` |
+| Client behavior | Central transport with request/response interceptors that unwrap envelopes and normalize `ApiError`, timeout/cancel, error mapping, refresh retry bounds, file/no-body handling, cache isolation/invalidation and no raw API calls in presentation code |
 | Integrations | Used email, jobs, webhook signatures/retries, AI/RAG, MCP issuer/discovery, realtime reconnect/role filtering and provider test behavior |
 | Runtime security | Missing required deployed secrets fail startup; no privileged secrets in browser output/logs; CORS/CSRF/cookies/payload limits/abuse controls verified |
 | Deployment | Actual selected production artifact runs, containers/config validate, readiness/networking/migrations work; no dev services exposed; backup/restore and rollback rehearsed where access permits |
