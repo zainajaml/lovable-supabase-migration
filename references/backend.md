@@ -7,7 +7,7 @@ Contents: [Express](#expressjs-branch) · [NestJS](#nestjs-branch) · [API behav
 Use a composition root to mount feature routers and inject dependencies. Keep application creation separate from listening so integration tests can use the app without opening a port. Adapt names to the project's conventions; the following is illustrative, not a requirement to create empty files.
 
 ```text
-backend/
+<app>-backend/        # dynamic name, see architecture.md
   src/
     app.ts
     server.ts
@@ -57,7 +57,7 @@ Keep schemas beside each feature and validate path/query/body independently, inc
 Use Nest modules, dependency injection, controller decorators, pipes, guards, filters and interceptors according to their responsibilities. Controllers already declare routes; do not add redundant Express-style route files.
 
 ```text
-backend/
+<app>-backend/        # dynamic name, see architecture.md
   src/
     main.ts
     app.module.ts

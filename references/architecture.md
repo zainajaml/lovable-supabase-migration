@@ -20,9 +20,19 @@ Include source and target paths; staged conversion sequence; data/file/identity 
 
 ## Repository boundaries
 
-Use independent sibling roots such as `<workspace>/<app>-frontend/` and `<workspace>/<app>-backend/`. Reuse the existing frontend repository when the selected stack makes that practical; create a new sibling frontend when a framework transition requires it. Preserve source history and the old application until replacement verification. Check path collisions first. Each target has its own Git root, package manifest, lockfile, build, tests, environment example, CI and deployment instructions. Do not place a new `.git` under an unrelated existing Git root without a deliberate plan. Remote repository creation/publishing follows user authorization and available access; local repositories can still be prepared when remotes are unavailable.
+Use independent sibling roots named after the actual application, never literal `frontend/` and `backend/` folders:
 
-The frontend must build without reaching into `../backend/src`. Share a versioned OpenAPI artifact, generated client package, or pinned generated DTOs, with a documented update process. Never share ORM entities or database row types as browser contracts. Backend changes should support staggered deployments where feasible.
+```text
+<workspace>/
+├── <app>-frontend/    # e.g. acme-crm-frontend/
+└── <app>-backend/     # e.g. acme-crm-backend/
+```
+
+Derive `<app>` dynamically, in this order: a name the user gives; otherwise the existing repository folder or Git remote name; otherwise the `name` in the source `package.json`; otherwise the product name in the app's title or README. Normalize it to lowercase kebab-case (letters, digits and hyphens; strip scopes like `@org/` and suffixes such as `-frontend`, `-app` or `-main` that would double up). Ignore generic generated names (for example `vite_react_shadcn_ts`, `my-app`, `lovable-project`, `tanstack-start`) and ask the user for a name instead. Present the proposed names and full paths in the plan so the user can change them, then use the same `<app>` everywhere: folder names, each repository's `package.json` `name`, Docker image/service and Compose project names, CI workflow names and documentation. If a proposed path already exists, do not reuse or overwrite it; propose a different name and ask.
+
+Reuse the existing frontend repository when the selected stack makes that practical (it keeps its current folder name unless the user asks to rename it; the new backend is then `<app>-backend` beside it); create a new sibling frontend when a framework transition requires it. Preserve source history and the old application until replacement verification. Check path collisions first. Each target has its own Git root, package manifest, lockfile, build, tests, environment example, CI and deployment instructions. Do not place a new `.git` under an unrelated existing Git root without a deliberate plan. Remote repository creation/publishing follows user authorization and available access; local repositories can still be prepared when remotes are unavailable.
+
+The frontend must build without reaching into the backend repository's source (for example `../<app>-backend/src`). Share a versioned OpenAPI artifact, generated client package, or pinned generated DTOs, with a documented update process. Never share ORM entities or database row types as browser contracts. Backend changes should support staggered deployments where feasible.
 
 ## Domain boundaries and proportionality
 

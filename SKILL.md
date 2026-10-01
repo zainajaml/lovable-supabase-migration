@@ -97,7 +97,7 @@ After presenting concise findings, ask only unanswered choices:
 1. Frontend: **Next.js**, **React.js**, or **Vue.js**.
 2. Backend: **Express.js** or **NestJS**.
 3. Data/identity scope: fully leave Supabase (default intended goal), or explicitly retain named managed capabilities? Must existing users, rows, and files carry over?
-4. Repository destinations and material hosting constraints, if unknown.
+4. Repository names and destinations (propose `<app>-frontend` and `<app>-backend` with `<app>` derived from the project as described in architecture.md; never fixed `frontend`/`backend`) and material hosting constraints, if unknown.
 
 Reuse explicit session decisions. Recommend a database library, auth approach, routing setup, package manager and deployment profile with reasons; do not ask the user to choose every package. Keep PostgreSQL semantics by default; treat a database-engine change as additional scope. If answers are unavailable, deliver discovery and the choices needed; do not choose a stack silently.
 
@@ -109,7 +109,7 @@ Read architecture.md, the applicable frontend/backend branches, and data-securit
 
 ### 4. Establish foundations
 
-Create collision-safe sibling repositories or use the authorized existing repository destinations. Preserve source history/worktrees and user edits. Do not nest backend inside frontend or initialize over an existing unrelated checkout. Add strict TypeScript, configuration validation, persistence/migrations, auth policy plumbing, errors/logging, health endpoints, API contract generation, central frontend client, and framework routing. Read data-security.md before selecting auth or moving data.
+Create collision-safe sibling repositories using the agreed dynamic names (`<app>-frontend`, `<app>-backend`), or use the authorized existing repository destinations. Preserve source history/worktrees and user edits. Do not nest backend inside frontend or initialize over an existing unrelated checkout. Add strict TypeScript, configuration validation, persistence/migrations, auth policy plumbing, errors/logging, health endpoints, API contract generation, central frontend client, and framework routing. Read data-security.md before selecting auth or moving data.
 
 ### 5. Migrate vertical features
 
