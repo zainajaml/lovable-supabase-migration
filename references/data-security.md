@@ -12,10 +12,11 @@ Split the schema into small, reviewable, ordered migrations; never one large gen
 database/migrations/
   0001_extensions.sql            # pgcrypto, citext, vector ... only those used
   0002_enums_and_types.sql
-  0003_create_users.sql          # one table per file: columns, PK, checks, defaults, own indexes
-  0004_create_organizations.sql
-  0005_create_memberships.sql    # FKs to tables created earlier
-  0006_create_projects.sql
+  0003_fn_generate_slug.sql      # a function that a later table default or check constraint uses
+  0004_create_users.sql          # one table per file: columns, PK, checks, defaults, own indexes
+  0005_create_organizations.sql
+  0006_create_memberships.sql    # FKs to tables created earlier
+  0007_create_projects.sql
   ...
   0020_add_cyclic_foreign_keys.sql   # only for FK cycles that cannot be created in table order
   0021_fn_set_updated_at.sql     # one function (or a tightly related group) per file
@@ -24,7 +25,7 @@ database/migrations/
   0024_policies.sql              # only when database RLS is deliberately retained
 ```
 
-Order by dependency: extensions → enums/types → tables in foreign-key order → deferred/cyclic FKs → functions → triggers → views/materialized views → grants/policies. Prefer one table per file; a join table may live with its owning table when that is clearer. ORMs that generate migrations (TypeORM, Prisma, Drizzle) must still be run per table or feature step to produce multiple small migrations, and any SQL the ORM cannot express (functions, triggers, partial/expression indexes, check constraints, extensions) goes into hand-written migrations under the same history. Each migration must apply cleanly to an empty database in order, and include a working down/rollback step where the tool supports it.
+Order by the actual object dependencies found in the source schema (for example from `pg_depend` or the order in a schema dump), not by a fixed category list. A typical order is extensions → enums/types → functions that tables need (used in defaults, check constraints, generated columns or domain checks) → tables in foreign-key order → deferred/cyclic FKs → remaining functions → triggers → views/materialized views → grants/policies. If a function itself depends on a table, create the table first and add the dependent default or constraint in a later migration. Prove the order by applying all migrations to an empty database. Prefer one table per file; a join table may live with its owning table when that is clearer. ORMs that generate migrations (TypeORM, Prisma, Drizzle) must still be run per table or feature step to produce multiple small migrations, and any SQL the ORM cannot express (functions, triggers, partial/expression indexes, check constraints, extensions) goes into hand-written migrations under the same history. Each migration must apply cleanly to an empty database in order, and include a working down/rollback step where the tool supports it.
 
 ### Schema coverage matrix
 
@@ -32,7 +33,7 @@ Build `docs/migration/schema-coverage.md` from the source schema export, one row
 
 | Source object | Kind | Target | Migration file / code location | Test | Status |
 | --- | --- | --- | --- | --- | --- |
-| `public.projects` | table | table | `0006_create_projects.sql` | repository integration test | done |
+| `public.projects` | table | table | `0007_create_projects.sql` | repository integration test | done |
 | `public.set_updated_at()` | function | DB function | `0021_fn_set_updated_at.sql` | trigger test | done |
 | `on_auth_user_created` → `handle_new_user()` | trigger on `auth.users` | registration use case | `modules/auth/register.service.ts` | signup test | done |
 | `cron: nightly-cleanup` | pg_cron job | backend scheduled job | `jobs/cleanup.job.ts` | job test | done |
@@ -57,7 +58,7 @@ A schema-only migration is not a populated application. If live access is absent
 
 Inventory actual auth flows and external identities. Choose a maintained auth/session library or provider that fits deployment. Map user IDs to application profiles/roles/ownership; migrate provider subject mappings and verification status deliberately. Preserve the original user UUIDs as target user IDs where possible so existing ownership/foreign-key values remain valid.
 
-Supabase Auth stores password hashes as standard bcrypt (`$2a$`/`$2b$`) in `auth.users.encrypted_password`, and the Lovable Cloud database export includes them. Import them into the target's bcrypt-verifying hash column so users keep their passwords; confirm the chosen auth library verifies bcrypt (and optionally rehash to a newer algorithm on next successful login). Do not force a password reset merely because the provider changes. Users without a hash (OAuth/magic-link/OTP-only) need their provider identities (`auth.identities`) mapped instead. Active sessions and refresh tokens are not portable: plan a forced re-login at cutover. OAuth providers must be re-registered with the new callback URLs and client configuration. Never print or log hashes; treat the export as a secret.
+Supabase Auth stores password hashes in `auth.users.encrypted_password`, and the Lovable Cloud database export includes them. Hashes created by Supabase itself are normally bcrypt (`$2a$`/`$2b$`/`$2y$`), but Supabase can also verify imported Argon2 (`$argon2id$`/`$argon2i$`) and Firebase scrypt hashes, so a project that previously migrated users may contain several formats. Inspect the actual hash prefixes and count users per format, without printing hash values. For each format, confirm the chosen target auth library can verify it (including any parameters such as Firebase scrypt's signer key, salt separator, rounds and memory cost, which must be obtained from the user's earlier Firebase project if needed). Import every supported hash unchanged with its format recorded, and optionally rehash to the target's preferred algorithm after the next successful login. For formats the target cannot verify, agree a fallback with the user (for example a verification adapter for that format, or a guided password reset for only those users) before cutover. Do not force a password reset on everyone merely because the provider changes, and never convert or weaken hashes. Users without a hash (OAuth/magic-link/OTP-only) need their provider identities (`auth.identities`) mapped instead. Active sessions and refresh tokens are not portable: plan a forced re-login at cutover. OAuth providers must be re-registered with the new callback URLs and client configuration. Never print or log hashes; treat the export as a secret.
 
 Replace dependencies on the `auth` schema explicitly: repoint foreign keys from `auth.users(id)` to the target users table, reimplement the `handle_new_user`-style signup trigger as a transactional registration use case (or a target-owned trigger), replace `auth.uid()`/`auth.jwt()` in defaults/functions/views with trusted request context or backend-set values, and move role/tenant claims held in user/app metadata into explicit tables. Inventory MFA factors, recovery codes, passkeys and account-linking requirements if present. Verify secure portability with the target provider; if unsupported, plan explicitly approved re-enrollment without silently disabling protection or locking users out. Never export private authenticators insecurely. Document session invalidation and user communication needs.
 
