@@ -32,6 +32,7 @@ Fix actionable failures within scope and rerun affected checks. External credent
 | Integrations | Used email, jobs, webhook signatures/retries, AI/RAG, MCP issuer/discovery, realtime reconnect/role filtering and provider test behavior |
 | Runtime security | Missing required deployed secrets fail startup; no privileged secrets in browser output/logs; CORS/CSRF/cookies/payload limits/abuse controls verified |
 | Logging | Structured JSON logs in production, readable in development; every request logged once with request ID, route template, status and duration; errors logged once with stack and request ID; secrets, tokens, cookies and passwords redacted (tested); no `console.log` in application code |
+| Email templates | (N/A if the app sends no email) Every source email inventoried and migrated with its content; all templates use the shared layout and the theme file derived from frontend tokens; email-safe HTML plus plain text; links use the configured frontend URL; render tests pass; each email previewed in Mailpit and visually compared with the frontend |
 | Docker spin-up | From a clean state, `docker compose -f docker-compose.dev.yml up --build` starts database, migrations and API (plus worker/mail if used), all healthy; health, Swagger and one authenticated call respond; production image boots, passes healthcheck, runs as non-root and fails fast without required secrets |
 | README | Root `README.md` in each repository covers prerequisites, env setup, Docker and non-Docker start, service URLs/ports, scripts, database, tests, logs, API docs, production and troubleshooting; every command was run successfully or marked unverified with a reason |
 | Deployment | Actual selected production artifact runs, containers/config validate, readiness/networking/migrations work; no dev services exposed; backup/restore and rollback rehearsed where access permits |
@@ -90,6 +91,7 @@ These patterns recur in partial Lovable/Supabase migrations. Use them as regress
 | --- | --- |
 | SDK removed but SDK-shaped facade and table-query endpoint remain | Domain DTO/API migration; inspect callers and remove adapter at exit gate |
 | Business logic left in TanStack/Next frontend server | Inventory and transfer privileged use cases; allow only rendering/thin API adapters |
+| Emails sent with default provider styling or old Supabase templates | Shared layout from frontend tokens; every template previewed and compared |
 | Auth SMTP migrated but product mail/AI still uses Lovable | Trace each sender/gateway/template; test replacement and disclose retained provider |
 | MCP tools use new API but OAuth trusts Supabase issuer | Verify metadata, issuer/audience and complete authorization flow together |
 | Target schema exists but rows/files were never imported | Separate schema, rows, identities and objects evidence/reconciliation |
