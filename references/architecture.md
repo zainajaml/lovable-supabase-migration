@@ -20,30 +20,36 @@ Include source and target paths; staged conversion sequence; data/file/identity 
 
 ## Repository boundaries
 
-Use independent sibling roots named after the actual application, never literal `frontend/` and `backend/` folders:
+Use two independent sibling roots whose names **the user chooses**:
 
 ```text
 <workspace>/
-├── <app>-frontend/    # e.g. acme-crm-frontend/
-└── <app>-backend/     # e.g. acme-crm-backend/
+├── <frontend-repo>/   # name given by the user
+└── <backend-repo>/    # name given by the user
 ```
+
+**Ask the user for the names; do not derive them.** Never name the repositories after the source app's folder, Git remote, `package.json` name or product title, and never use literal `frontend`/`backend` unless the user chooses exactly that. Before creating any folder, ask in one message:
+
+1. **Frontend repository name**, with options: reuse the existing source repository as the frontend (keeps its folder), or create a new folder with a name the user types.
+2. **Backend repository name**: a name the user types.
+3. **Parent location**: the default `<workspace>` described below, or another path the user gives.
+
+Do not suggest app-derived names as defaults. Validate the answers: lowercase letters, digits, hyphens or underscores; no spaces, slashes or `..`; the two names must differ; and a new folder's path must not already exist (if it does, say so and ask again; never reuse or overwrite it). The only existing folder that may be used is the source repository, and only when the user picked the reuse option for the frontend. Record the confirmed names and absolute paths in the plan, then use them consistently: folder names, each repository's `package.json` `name`, Docker image/service and Compose project names, CI workflow names and documentation. If the user has not answered, continue read-only analysis and do not create either repository.
 
 `<workspace>` is the **parent directory of the source application's Git root** (the folder that contains the current Lovable/Supabase repository), not the current working directory and never a folder inside the source repository. Find it with `git rev-parse --show-toplevel` from the source app and take its parent. If the source is inside a monorepo, or the parent is not writable or is an unrelated location (for example the home directory or a system folder), ask the user where to create the repositories. A destination the user names always wins. Example:
 
 ```text
 /home/dev/projects/            <- <workspace> (parent of the source repo)
-├── acme-crm/                  <- existing Lovable source repo (preserved)
-├── acme-crm-frontend/         <- new, or acme-crm/ reused as the frontend
-└── acme-crm-backend/          <- new
+├── <source-repo>/             <- existing Lovable source repo (preserved)
+├── <frontend-repo>/           <- name from the user, or the source repo reused as the frontend
+└── <backend-repo>/            <- name from the user
 ```
 
 New repositories are created **locally** with `git init` and their own initial commit. Creating or pushing to a remote (GitHub, GitLab and so on) happens only when the user asks and access is available.
 
-Derive `<app>` dynamically, in this order: a name the user gives; otherwise the existing repository folder or Git remote name; otherwise the `name` in the source `package.json`; otherwise the product name in the app's title or README. Normalize it to lowercase kebab-case (letters, digits and hyphens; strip scopes like `@org/` and suffixes such as `-frontend`, `-app` or `-main` that would double up). Ignore generic generated names (for example `vite_react_shadcn_ts`, `my-app`, `lovable-project`, `tanstack-start`) and ask the user for a name instead. Present the proposed names and full paths in the plan so the user can change them, then use the same `<app>` everywhere: folder names, each repository's `package.json` `name`, Docker image/service and Compose project names, CI workflow names and documentation. If a proposed path already exists, do not reuse or overwrite it; propose a different name and ask.
+Reuse the existing frontend repository when the selected stack makes that practical (it keeps its current folder name unless the user asks to rename it; the new backend is then `<backend-repo>` beside it); create a new sibling frontend when a framework transition requires it. Preserve source history and the old application until replacement verification. Check path collisions first. Each target has its own Git root, package manifest, lockfile, build, tests, environment example, CI and deployment instructions. Do not place a new `.git` under an unrelated existing Git root without a deliberate plan. Remote repository creation/publishing follows user authorization and available access; local repositories can still be prepared when remotes are unavailable.
 
-Reuse the existing frontend repository when the selected stack makes that practical (it keeps its current folder name unless the user asks to rename it; the new backend is then `<app>-backend` beside it); create a new sibling frontend when a framework transition requires it. Preserve source history and the old application until replacement verification. Check path collisions first. Each target has its own Git root, package manifest, lockfile, build, tests, environment example, CI and deployment instructions. Do not place a new `.git` under an unrelated existing Git root without a deliberate plan. Remote repository creation/publishing follows user authorization and available access; local repositories can still be prepared when remotes are unavailable.
-
-The frontend must build without reaching into the backend repository's source (for example `../<app>-backend/src`). Share the contract without a third repository: the backend owns and versions the OpenAPI spec (for example `openapi/openapi.json`), and the frontend generates its typed client into its own source (for example `src/shared/api/generated/`) from a pinned copy of that spec or the backend's spec URL, with a documented update command. Publish the client as a package only if the user explicitly asks. Never share ORM entities or database row types as browser contracts. Backend changes should support staggered deployments where feasible.
+The frontend must build without reaching into the backend repository's source (for example `../<backend-repo>/src`). Share the contract without a third repository: the backend owns and versions the OpenAPI spec (for example `openapi/openapi.json`), and the frontend generates its typed client into its own source (for example `src/shared/api/generated/`) from a pinned copy of that spec or the backend's spec URL, with a documented update command. Publish the client as a package only if the user explicitly asks. Never share ORM entities or database row types as browser contracts. Backend changes should support staggered deployments where feasible.
 
 ## Domain boundaries and proportionality
 

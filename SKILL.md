@@ -35,16 +35,16 @@ This skill is generic. It must work for any Lovable or Supabase application: any
 
 ## Scope boundary
 
-All work stays inside exactly two target projects: `<app>-frontend` and `<app>-backend` (the frontend may be the reused source repository). Everything the migration needs is placed in one of them:
+All work stays inside exactly two target projects: `<frontend-repo>` and `<backend-repo>` (the frontend may be the reused source repository). Everything the migration needs is placed in one of them:
 
 | Concern | Lives in |
 | --- | --- |
-| UI, routes, feature API client, generated API types, component/E2E tests | `<app>-frontend` |
-| API, business logic, database migrations/seeds, auth, jobs/workers, webhooks, integrations, Edge Function ports, MCP server, data/identity/file import scripts, OpenAPI spec, Docker Compose, test database setup, `docs/migration/` | `<app>-backend` |
+| UI, routes, feature API client, generated API types, component/E2E tests | `<frontend-repo>` |
+| API, business logic, database migrations/seeds, auth, jobs/workers, webhooks, integrations, Edge Function ports, MCP server, data/identity/file import scripts, OpenAPI spec, Docker Compose, test database setup, `docs/migration/` | `<backend-repo>` |
 
 - Do not create any other repository or top-level folder: no shared/contracts/types package, infra/devops, docs, worker, MCP, migrations or monorepo root, and no files directly in the parent workspace folder. If something looks like it needs its own deployable (for example a worker), keep it in the backend as a separate entry point and Docker target.
-- Treat the source repository as read-only, except when it is explicitly reused as `<app>-frontend`.
-- Do not change anything outside these projects: no global package installs, shell profiles, system or editor settings, hosts files, other projects, or user-level config. Temporary files go in the system temp directory and are deleted afterwards; Docker containers, networks and volumes for development and tests use the `<app>` prefix and test ones are removed after the run.
+- Treat the source repository as read-only, except when it is explicitly reused as `<frontend-repo>`.
+- Do not change anything outside these projects: no global package installs, shell profiles, system or editor settings, hosts files, other projects, or user-level config. Temporary files go in the system temp directory and are deleted afterwards; Docker containers, networks and volumes for development and tests use the `<backend-repo>` name as prefix and test ones are removed after the run.
 - Stay within the migration. Do not add new product features, redesign the UI, refactor or upgrade unrelated code, or migrate other clients (mobile apps, scripts, partner integrations). Record such findings in the final report as follow-ups and ask the user before expanding scope.
 
 ## Non-negotiable outcomes
@@ -64,6 +64,9 @@ All work stays inside exactly two target projects: `<app>-frontend` and `<app>-b
 - Use one standard API payload format, applied centrally: backend response/error interceptors (or middleware) wrap every application JSON response, except documented protocol responses that must keep their own format (OAuth, MCP, third-party webhooks, health checks, files, streams, SSE, 204), and the frontend API client uses request/response interceptors. Controllers and components never hand-build envelopes or parse raw responses.
 - Handle errors deliberately: typed domain errors, try/catch only where it adds value (translate, clean up, compensate, retry), one central error handler, and bounded retries with backoff only for transient failures of safe or idempotent operations. Never swallow errors or retry forever.
 - No circular dependencies between modules, files or Nest providers in either repository; check with a tool in CI.
+- Proper structured backend logging from the start: one JSON logger, levels via `LOG_LEVEL`, one request log line with request ID, route, status and duration, central redaction of secrets/tokens/personal data, no `console.log` in application code (see backend.md).
+- Docker must spin up the APIs, not just the database: one `docker compose -f docker-compose.dev.yml up --build` in `<backend-repo>` starts the database, runs migrations, and starts the API (plus worker/mail only if used) with healthchecks; production uses a multi-stage, non-root image. Verify it actually starts (see deployment.md).
+- Each repository has a root `README.md` that explains how to spin everything up — prerequisites, env setup, Docker and non-Docker start, service URLs and ports, scripts, database, tests, logs, API docs, production and troubleshooting — and every command in it has been run successfully.
 - No browser database credentials, service-role keys, known deployed secret defaults, or tokens in redirect URLs. Never print secret values during audits.
 - Leave no unused code in the target repositories: no empty or placeholder folders, unused files, components, exports, dependencies, scripts, environment variables, scaffold demo code, or leftover Supabase/Lovable folders. Run the unused-code pass in implementation.md before handover and list every removal in the final report. Archive historical evidence under `docs/migration/history/` instead of leaving it in active code.
 - Keep changes reversible; preserve original code/history and migration evidence. Do not overwrite sibling directories or delete duplicate repositories on assumption.
@@ -111,7 +114,7 @@ After presenting concise findings, ask only unanswered choices:
 1. Frontend: **Next.js**, **React.js**, or **Vue.js**.
 2. Backend: **Express.js** or **NestJS**.
 3. Data/identity scope: fully leave Supabase (default intended goal), or explicitly retain named managed capabilities? Must existing users, rows, and files carry over?
-4. Repository names and destinations (propose `<app>-frontend` and `<app>-backend` with `<app>` derived from the project as described in architecture.md; never fixed `frontend`/`backend`) and material hosting constraints, if unknown.
+4. Repository names and location (always ask; never derive from the app name): the **frontend repository name** (or reuse the existing source repository as the frontend), the **backend repository name**, and the **parent folder** (default: the folder containing the source repository). Also ask about material hosting constraints, if unknown.
 
 Reuse explicit session decisions. Recommend a database library, auth approach, routing setup, package manager and deployment profile with reasons; do not ask the user to choose every package. Keep PostgreSQL semantics by default; treat a database-engine change as additional scope. If answers are unavailable, deliver discovery and the choices needed; do not choose a stack silently.
 
@@ -123,7 +126,7 @@ Read architecture.md, the applicable frontend/backend branches, and data-securit
 
 ### 4. Establish foundations
 
-Create collision-safe sibling repositories using the agreed dynamic names (`<app>-frontend`, `<app>-backend`) in the parent directory of the source repository's Git root (see architecture.md), unless the user named another destination, or use the authorized existing repository destinations. Preserve source history/worktrees and user edits. Do not nest backend inside frontend or initialize over an existing unrelated checkout. Add strict TypeScript, configuration validation, persistence/migrations, auth policy plumbing, errors/logging, health endpoints, API contract generation, central frontend client, and framework routing. Read data-security.md before selecting auth or moving data.
+Create collision-safe sibling repositories using the frontend and backend repository names the user gave (`<frontend-repo>`, `<backend-repo>`) in the parent directory of the source repository's Git root (see architecture.md), unless the user named another destination, or use the authorized existing repository destinations. Preserve source history/worktrees and user edits. Do not nest backend inside frontend or initialize over an existing unrelated checkout. Add strict TypeScript, configuration validation, persistence/migrations, auth policy plumbing, errors/logging, health endpoints, API contract generation, central frontend client, and framework routing. Read data-security.md before selecting auth or moving data.
 
 ### 5. Migrate vertical features
 

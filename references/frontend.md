@@ -7,7 +7,7 @@ Map routes/screens to domain features. Route files compose feature screens and r
 Use this common shape, adding only directories with real responsibilities:
 
 ```text
-# inside <app>-frontend/ (dynamic name, see architecture.md) or the reused existing repo
+# inside <frontend-repo>/ (name given by the user, see architecture.md) or the reused existing repo
 src/
   features/
     projects/

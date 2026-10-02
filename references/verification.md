@@ -10,7 +10,7 @@ Fix actionable failures within scope and rerun affected checks. External credent
 
 | Gate | Evidence required |
 | --- | --- |
-| Scope boundary | Every created or modified file is inside `<app>-frontend` or `<app>-backend` (or the reused source repo); no extra repositories or workspace-level files; nothing changed outside them (no global installs, system or user config); test containers and temp files removed; out-of-scope findings listed as follow-ups, not implemented |
+| Scope boundary | Every created or modified file is inside `<frontend-repo>` or `<backend-repo>` (or the reused source repo); no extra repositories or workspace-level files; nothing changed outside them (no global installs, system or user config); test containers and temp files removed; out-of-scope findings listed as follow-ups, not implemented |
 | Source/canonical roots | Source and target roots match deployment evidence; no accidental duplicate-tree edits; independent repository roots and package/build boundaries |
 | Architectural structure | Actual feature modules, thin routes/controllers, backend services/use cases, isolated persistence, frontend feature API/hooks, explicit public exports; no unnecessary empty layers |
 | Type/build quality | Independent clean dependency installs, strict type checks, lint/format and production builds; valid framework runtime and route deep links |
@@ -31,6 +31,9 @@ Fix actionable failures within scope and rerun affected checks. External credent
 | Client behavior | Central transport with request/response interceptors that unwrap envelopes and normalize `ApiError`, timeout/cancel, error mapping, refresh retry bounds, file/no-body handling, cache isolation/invalidation and no raw API calls in presentation code |
 | Integrations | Used email, jobs, webhook signatures/retries, AI/RAG, MCP issuer/discovery, realtime reconnect/role filtering and provider test behavior |
 | Runtime security | Missing required deployed secrets fail startup; no privileged secrets in browser output/logs; CORS/CSRF/cookies/payload limits/abuse controls verified |
+| Logging | Structured JSON logs in production, readable in development; every request logged once with request ID, route template, status and duration; errors logged once with stack and request ID; secrets, tokens, cookies and passwords redacted (tested); no `console.log` in application code |
+| Docker spin-up | From a clean state, `docker compose -f docker-compose.dev.yml up --build` starts database, migrations and API (plus worker/mail if used), all healthy; health, Swagger and one authenticated call respond; production image boots, passes healthcheck, runs as non-root and fails fast without required secrets |
+| README | Root `README.md` in each repository covers prerequisites, env setup, Docker and non-Docker start, service URLs/ports, scripts, database, tests, logs, API docs, production and troubleshooting; every command was run successfully or marked unverified with a reason |
 | Deployment | Actual selected production artifact runs, containers/config validate, readiness/networking/migrations work; no dev services exposed; backup/restore and rollback rehearsed where access permits |
 | Cleanup | Classified remaining dependency/name/URL hits, obsolete shims removed, authoritative docs/config/lockfiles and canonical deployment paths |
 | Unused code and folders | Unused-file/export/dependency tool clean or every remaining finding justified; no empty or placeholder folders; no scaffold demo code; `.env.example` matches config consumers; build and tests pass after removals |
@@ -52,7 +55,7 @@ Example adversarial cases: user A reads user B's object; member attempts owner r
 
 Run this after implementation is otherwise complete, and again after any fix it triggers:
 
-1. **Isolate.** Start a dedicated PostgreSQL for testing (for example a `test` service or profile in `docker-compose.dev.yml`, or a Testcontainers instance) with a database name such as `<app>_test`. Before any destructive step, assert that the connection target is the test database (name/host check); refuse to run if it points at a production or shared host.
+1. **Isolate.** Start a dedicated PostgreSQL for testing (for example a `test` service or profile in `docker-compose.dev.yml`, or a Testcontainers instance) with a database name such as `<backend_repo>_test` (the backend repository name in snake_case). Before any destructive step, assert that the connection target is the test database (name/host check); refuse to run if it points at a production or shared host.
 2. **Build from zero.** Drop and recreate the test database, run every migration in order from empty, and confirm the run completes with no errors. Optionally run all down migrations and up again where the tool supports it.
 3. **Load fixtures.** Seed deterministic, non-sensitive fixtures covering each role and tenant needed by the authorization matrix (for example owner, member, other-tenant user, admin, anonymous). Never use exported production data unless it is sanitized and the user approved it.
 4. **Start the backend** in production-like mode (production build, validated config, test secrets) and wait for liveness and readiness. Confirm startup fails when a required secret is removed.
@@ -113,7 +116,7 @@ When the work ends (complete, partial or blocked), write `docs/migration/report.
 5. Schema/migration owner and separate row, identity and storage import/reconciliation results.
 6. Auth/session/authorization changes, security checks and any unresolved policy differences.
 7. External integrations, frontend-server moves and explicitly retained providers.
-8. Environment variable names (no values), dev/prod setup, CI and deployment/cutover commands.
+8. Environment variable names (no values), dev/prod setup (how to spin up each repository, pointing to its root README), CI and deployment/cutover commands.
 9. Tests performed with actual outcomes and blocked/not-run checks.
 10. Remaining dependency references, temporary adapters, legacy docs/schema and disposition.
 11. Cleanup: every removed file, folder, dependency, script and variable, with reason.
@@ -124,7 +127,7 @@ Call the migration complete only for the agreed scope when required evidence pas
 Use this skeleton for `docs/migration/report.md` or the final response; omit sections that are NOT APPLICABLE with a one-line reason:
 
 ```markdown
-# Migration audit and overview report: <app>
+# Migration audit and overview report: <frontend-repo> + <backend-repo>
 Status: <complete for agreed scope | implemented, verification blocked | partial>
 Date: <date>  Scope: <agreed scope and any retained providers>
 Project profile: <origin, hosting mode, runtime, Supabase features used, auth model, tenancy, other clients, size>

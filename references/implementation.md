@@ -4,7 +4,7 @@
 
 1. Recheck canonical paths and user changes. Prepare independent target repositories without overwriting existing work. Keep source provenance and a reversible baseline.
 2. Resolve compatible runtime/package versions and one package manager per repository. Create strict TypeScript, formatting/linting and meaningful build/test scripts. Do not add success-returning placeholder scripts.
-3. Implement config validation, logging, errors, database client/migration path, auth/session primitives, HTTP security, request correlation, health/readiness, and OpenAPI generation.
+3. Implement config validation, structured logging with request IDs and redaction (backend.md), errors, database client/migration path, auth/session primitives, HTTP security, request correlation, health/readiness, and OpenAPI generation. Add the multi-stage `Dockerfile`, `.dockerignore` and `docker-compose.dev.yml` that spins up database, migrations and API (deployment.md) early, and start each repository's root `README.md`; keep both updated as features land.
 4. Establish frontend routing/providers, shared API transport/error types, session handling, design primitives and contract consumption.
 5. Implement one representative protected feature end-to-end, including a denied request and documented contract. Use it to validate boundaries before repeating across modules.
 
